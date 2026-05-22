@@ -1,0 +1,2466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Esta Reunião Poderia Ser Um E-mail?</title>
+  <meta name="description" content="POC frontend para analisar se uma reunião realmente precisa acontecer." />
+  <style>
+    :root {
+      --primary: #2563EB;
+      --primary-soft: #DBEAFE;
+      --success: #10B981;
+      --success-soft: #D1FAE5;
+      --warning: #F59E0B;
+      --warning-soft: #FEF3C7;
+      --danger: #EF4444;
+      --danger-soft: #FEE2E2;
+      --bg: #F8FAFC;
+      --bg-elevated: #FFFFFF;
+      --card: #FFFFFF;
+      --card-muted: #F1F5F9;
+      --text: #0F172A;
+      --text-soft: #475569;
+      --text-muted: #64748B;
+      --border: rgba(15, 23, 42, 0.08);
+      --border-strong: rgba(15, 23, 42, 0.12);
+      --shadow-sm: 0 8px 30px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 18px 60px rgba(15, 23, 42, 0.10);
+      --shadow-lg: 0 28px 80px rgba(15, 23, 42, 0.14);
+      --radius-sm: 12px;
+      --radius-md: 18px;
+      --radius-lg: 24px;
+      --radius-pill: 999px;
+      --container: 1160px;
+      --header-height: 76px;
+      --transition: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      --gradient: linear-gradient(135deg, #2563EB 0%, #1D4ED8 60%, #0F172A 100%);
+      --gauge-angle: 0deg;
+      --gauge-color: var(--danger);
+    }
+
+    [data-theme="dark"] {
+      --primary: #3B82F6;
+      --primary-soft: rgba(59, 130, 246, 0.18);
+      --success: #34D399;
+      --success-soft: rgba(16, 185, 129, 0.18);
+      --warning: #FBBF24;
+      --warning-soft: rgba(245, 158, 11, 0.18);
+      --danger: #F87171;
+      --danger-soft: rgba(239, 68, 68, 0.18);
+      --bg: #020617;
+      --bg-elevated: #0B1220;
+      --card: #0F172A;
+      --card-muted: #111C31;
+      --text: #E2E8F0;
+      --text-soft: #CBD5E1;
+      --text-muted: #94A3B8;
+      --border: rgba(148, 163, 184, 0.12);
+      --border-strong: rgba(148, 163, 184, 0.18);
+      --shadow-sm: 0 10px 35px rgba(2, 6, 23, 0.30);
+      --shadow-md: 0 24px 70px rgba(2, 6, 23, 0.38);
+      --shadow-lg: 0 30px 90px rgba(2, 6, 23, 0.45);
+      --gradient: linear-gradient(135deg, #2563EB 0%, #1E40AF 55%, #020617 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.10), transparent 30%),
+        radial-gradient(circle at top right, rgba(16, 185, 129, 0.07), transparent 24%),
+        var(--bg);
+      line-height: 1.55;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    body.menu-open {
+      overflow: hidden;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(calc(100% - 32px), var(--container));
+      margin: 0 auto;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: -999px;
+      top: 16px;
+      z-index: 100;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+
+    .skip-link:focus {
+      left: 16px;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(14px);
+      background: color-mix(in srgb, var(--bg) 78%, transparent);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: var(--gradient);
+      color: white;
+      box-shadow: var(--shadow-sm);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 0.98rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-subtitle {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-button,
+    .ghost-button,
+    .primary-button,
+    .secondary-button,
+    .danger-button,
+    .add-button {
+      border: 1px solid transparent;
+      border-radius: 14px;
+      cursor: pointer;
+      transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        background var(--transition),
+        border-color var(--transition),
+        color var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .icon-button:hover,
+    .ghost-button:hover,
+    .primary-button:hover,
+    .secondary-button:hover,
+    .danger-button:hover,
+    .add-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .icon-button:active,
+    .ghost-button:active,
+    .primary-button:active,
+    .secondary-button:active,
+    .danger-button:active,
+    .add-button:active {
+      transform: translateY(0);
+    }
+
+    .icon-button:focus-visible,
+    .ghost-button:focus-visible,
+    .primary-button:focus-visible,
+    .secondary-button:focus-visible,
+    .danger-button:focus-visible,
+    .add-button:focus-visible,
+    .remove-participant:focus-visible,
+    .menu-toggle:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--primary) 30%, transparent);
+      outline-offset: 2px;
+    }
+
+    .menu-toggle,
+    .theme-toggle {
+      width: 46px;
+      height: 46px;
+      display: inline-grid;
+      place-items: center;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theme-toggle .theme-label,
+    .menu-toggle .menu-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      clip: rect(0, 0, 0, 0);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .desktop-links {
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .desktop-links a,
+    .mobile-links a {
+      padding: 10px 14px;
+      color: var(--text-soft);
+      border-radius: 12px;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .desktop-links a:hover,
+    .mobile-links a:hover {
+      background: var(--card-muted);
+      color: var(--text);
+    }
+
+    .mobile-panel {
+      display: none;
+      padding: 0 0 16px;
+    }
+
+    .mobile-panel.is-open {
+      display: block;
+      animation: fadeInUp 240ms ease;
+    }
+
+    .mobile-links {
+      display: grid;
+      gap: 8px;
+      padding-top: 8px;
+    }
+
+    .hero {
+      position: relative;
+      padding: 46px 0 28px;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      display: grid;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      background: color-mix(in srgb, var(--card) 82%, transparent);
+      color: var(--text-soft);
+      box-shadow: var(--shadow-sm);
+      font-size: 0.92rem;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      margin: 0 0 14px;
+      font-size: clamp(2rem, 5vw, 4.3rem);
+      line-height: 1.02;
+      letter-spacing: -0.05em;
+      max-width: 12ch;
+    }
+
+    .hero p {
+      margin: 0 0 22px;
+      color: var(--text-soft);
+      font-size: clamp(1rem, 2vw, 1.14rem);
+      max-width: 60ch;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 26px;
+    }
+
+    .primary-button,
+    .secondary-button,
+    .ghost-button,
+    .danger-button,
+    .add-button {
+      min-height: 48px;
+      padding: 0 18px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .primary-button {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.26);
+    }
+
+    .primary-button:hover {
+      background: #1d4ed8;
+    }
+
+    .secondary-button {
+      background: var(--card);
+      border-color: var(--border);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .ghost-button {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .danger-button {
+      background: color-mix(in srgb, var(--danger) 10%, var(--card));
+      border-color: color-mix(in srgb, var(--danger) 16%, var(--border));
+      color: var(--danger);
+    }
+
+    .add-button {
+      background: var(--card-muted);
+      border-color: var(--border);
+      color: var(--text);
+      width: 100%;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: color-mix(in srgb, var(--card) 88%, transparent);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition), border-color var(--transition);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-strong);
+    }
+
+    .stat-number {
+      display: block;
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .hero-visual {
+      position: relative;
+    }
+
+    .hero-panel {
+      background: color-mix(in srgb, var(--card) 88%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow-lg);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), transparent 55%);
+      pointer-events: none;
+    }
+
+    .window-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .window-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--card-muted);
+    }
+
+    .window-dot:nth-child(1) { background: #fb7185; }
+    .window-dot:nth-child(2) { background: #fbbf24; }
+    .window-dot:nth-child(3) { background: #34d399; }
+
+    .mock-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .mock-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mock-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .mock-title strong {
+      font-size: 1rem;
+      letter-spacing: -0.03em;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .pill.primary {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .pill.success {
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .pill.warning {
+      background: var(--warning-soft);
+      color: #b45309;
+    }
+
+    .pill.danger {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    [data-theme="dark"] .pill.warning {
+      color: var(--warning);
+    }
+
+    .mini-gauge {
+      height: 14px;
+      background: var(--card-muted);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .mini-gauge-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--danger), var(--warning), var(--success));
+      width: 72%;
+      animation: growBar 1.1s ease;
+    }
+
+    .mock-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mock-line {
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 16%, var(--card-muted)), var(--card-muted));
+    }
+
+    .mock-line.short { width: 55%; }
+    .mock-line.medium { width: 72%; }
+    .mock-line.long { width: 100%; }
+
+    .floating-note {
+      position: absolute;
+      right: -8px;
+      bottom: 18px;
+      width: min(240px, 72%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: var(--shadow-md);
+      animation: floatNote 4s ease-in-out infinite;
+    }
+
+    .floating-note strong {
+      display: block;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .floating-note p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .section {
+      padding: 28px 0;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: clamp(1.45rem, 3vw, 2.2rem);
+      letter-spacing: -0.04em;
+    }
+
+    .section-heading p {
+      margin: 6px 0 0;
+      color: var(--text-muted);
+      max-width: 64ch;
+    }
+
+    .card {
+      background: color-mix(in srgb, var(--card) 92%, transparent);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 20px;
+      transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+    }
+
+    .card:hover {
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .analyzer-layout {
+      display: grid;
+      gap: 18px;
+    }
+
+    .form-card-header {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .form-card-header h3,
+    .results-header h3,
+    .history-card h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      letter-spacing: -0.03em;
+    }
+
+    .form-card-header p,
+    .results-header p,
+    .history-card p {
+      margin: 6px 0 0;
+      color: var(--text-muted);
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label,
+    .participants-header h4 {
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+
+    .field small,
+    .participants-header p {
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .input,
+    .textarea,
+    .select {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text);
+      border-radius: 16px;
+      padding: 14px 16px;
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+
+    .input::placeholder,
+    .textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input:hover,
+    .textarea:hover,
+    .select:hover {
+      border-color: var(--border-strong);
+    }
+
+    .textarea {
+      min-height: 132px;
+      resize: vertical;
+    }
+
+    .participants-card {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border-radius: 18px;
+      background: var(--card-muted);
+      border: 1px solid var(--border);
+    }
+
+    .participants-header {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .participants-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .participant-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      align-items: end;
+      padding: 14px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 18px;
+      animation: fadeInUp 260ms ease;
+    }
+
+    .participant-row .field {
+      gap: 6px;
+    }
+
+    .participant-row .field label {
+      font-size: 0.9rem;
+      color: var(--text-soft);
+    }
+
+    .remove-participant {
+      min-height: 48px;
+      border-radius: 14px;
+      border: 1px solid color-mix(in srgb, var(--danger) 18%, var(--border));
+      background: color-mix(in srgb, var(--danger) 10%, var(--card));
+      color: var(--danger);
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform var(--transition), background var(--transition), border-color var(--transition);
+    }
+
+    .remove-participant:hover {
+      transform: translateY(-1px);
+      background: color-mix(in srgb, var(--danger) 16%, var(--card));
+    }
+
+    .actions-row {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .inline-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .metric-tile {
+      padding: 14px;
+      border-radius: 18px;
+      background: var(--card-muted);
+      border: 1px solid var(--border);
+    }
+
+    .metric-tile span {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.84rem;
+      margin-bottom: 6px;
+    }
+
+    .metric-tile strong {
+      display: block;
+      font-size: 1.08rem;
+      letter-spacing: -0.03em;
+    }
+
+    .results-section {
+      display: none;
+    }
+
+    .results-section.is-visible {
+      display: block;
+      animation: fadeInUp 300ms ease;
+    }
+
+    .results-layout {
+      display: grid;
+      gap: 18px;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .results-main {
+	display: grid;
+	 gap: 18px;
+	  grid-template-columns: 1fr;   /* sempre 1 coluna por padrão */
+	}
+
+    .verdict-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .verdict-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -80px auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--primary) 10%, transparent);
+      filter: blur(10px);
+      pointer-events: none;
+    }
+
+    .verdict-label {
+      display: inline-flex;
+      margin-bottom: 14px;
+    }
+
+    .verdict-text {
+      margin: 0 0 10px;
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      line-height: 1.05;
+      letter-spacing: -0.05em;
+    }
+
+    .verdict-description {
+      margin: 0;
+      color: var(--text-soft);
+      max-width: 58ch;
+    }
+
+    .result-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .score-card,
+    .cost-card,
+    .summary-card,
+    .alternatives-card,
+    .fun-card,
+    .history-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-wrap {
+      display: grid;
+      place-items: center;
+      gap: 16px;
+      padding: 8px 0 2px;
+    }
+
+    .gauge {
+      width: min(220px, 68vw);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at center, var(--card) 0 56%, transparent 57%),
+        conic-gradient(var(--gauge-color) 0deg var(--gauge-angle), var(--card-muted) var(--gauge-angle) 360deg);
+      display: grid;
+      place-items: center;
+      position: relative;
+      transition: background 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: inset 0 0 0 1px var(--border), var(--shadow-sm);
+    }
+
+    .gauge::after {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      pointer-events: none;
+    }
+
+    .gauge-inner {
+      text-align: center;
+      z-index: 1;
+    }
+
+    .gauge-score {
+      display: block;
+      font-size: clamp(2rem, 8vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.06em;
+      line-height: 1;
+    }
+
+    .gauge-subtitle {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      margin-top: 6px;
+      display: block;
+    }
+
+    .score-legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .cost-highlight {
+      margin: 10px 0 16px;
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.06em;
+    }
+
+    .cost-caption {
+      margin: 0 0 16px;
+      color: var(--text-soft);
+    }
+
+    .cost-breakdown {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .breakdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--card-muted);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .breakdown-item strong {
+      letter-spacing: -0.02em;
+    }
+
+    .breakdown-item span {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .summary-card p,
+    .fun-card p {
+      margin: 0;
+      color: var(--text-soft);
+    }
+
+    .justification-box {
+      padding: 14px 16px;
+      background: var(--card-muted);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      margin-top: 14px;
+      color: var(--text-soft);
+    }
+
+    .alternatives-list {
+      display: grid;
+      gap: 10px;
+      margin: 14px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .alternatives-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--card-muted);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: var(--text-soft);
+    }
+
+    .alternatives-list li::before {
+      content: "→";
+      color: var(--primary);
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .fun-card {
+      background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 9%, var(--card)), var(--card));
+    }
+
+    .fun-emoji {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+
+    .history-card .history-row {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .history-empty {
+      color: var(--text-muted);
+      margin-top: 12px;
+    }
+
+    .history-summary {
+      display: grid;
+      gap: 10px;
+    }
+
+    .summary-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      padding: 8px 12px;
+      border-radius: var(--radius-pill);
+      background: var(--card-muted);
+      border: 1px solid var(--border);
+      color: var(--text-soft);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .surface-grid {
+	  display: grid;
+	  gap: 18px;
+	 min-width: 0;
+	}
+
+	.results-main > *,
+	.surface-grid > *,
+	.result-grid > *,
+	.breakdown-item > * {
+	 min-width: 0;
+	}
+
+	.result-grid {
+	  display: grid;
+	  gap: 18px;
+	  grid-template-columns: 1fr;
+	}
+
+	.cost-card,
+	.score-card,
+	.summary-card,
+	.verdict-card {
+	  min-width: 0;
+	}
+
+	.cost-highlight {
+	  font-size: clamp(1.7rem, 5vw, 3rem);
+	}
+
+	.breakdown-item {
+	  align-items: start;
+	}
+
+	.verdict-text,
+	.cost-highlight,
+	.breakdown-item strong,
+	.summary-chip,
+	.justification-box,
+	.cost-caption,
+	.verdict-description,
+	#executiveInsight {
+	  overflow-wrap: anywhere;
+	  word-break: break-word;
+	}
+
+    .footer {
+      padding: 24px 0 40px;
+      color: var(--text-muted);
+    }
+
+    .footer-card {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--card) 92%, transparent);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .footer-card p {
+      margin: 0;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(20px);
+      min-width: min(92vw, 320px);
+      background: var(--text);
+      color: white;
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition), transform var(--transition);
+      z-index: 80;
+      text-align: center;
+    }
+
+    .toast.is-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      clip: rect(0, 0, 0, 0);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .pulse {
+      animation: pulseGlow 2.2s ease-in-out infinite;
+    }
+
+    @keyframes growBar {
+      from { width: 0; }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes floatNote {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.16);
+      }
+      50% {
+        box-shadow: 0 0 0 12px rgba(37, 99, 235, 0.00);
+      }
+    }
+
+    @media (min-width: 640px) {
+      .hero {
+        padding: 58px 0 38px;
+      }
+
+      .actions-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .participant-row {
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .desktop-links {
+        display: flex;
+      }
+
+      .menu-toggle {
+        display: none;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1.08fr 0.92fr;
+        gap: 34px;
+      }
+
+      .results-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .analyzer-layout {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .history-card {
+        position: sticky;
+        top: calc(var(--header-height) + 18px);
+      }
+
+      .actions-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1024px) {
+	  .section {
+    padding: 38px 0;
+	  }
+
+	  .card {
+    padding: 24px;
+	  }
+
+	  .form-grid {
+    gap: 18px;
+	  }
+
+	  .surface-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+    align-items: start;
+	  }
+
+	  .results-main {
+    grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+    align-items: start;
+	  }
+
+	  .result-grid {
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 18px;
+	  }
+	}
+
+    @media print {
+      :root {
+        --bg: #ffffff;
+        --card: #ffffff;
+        --bg-elevated: #ffffff;
+        --card-muted: #f8fafc;
+        --text: #0f172a;
+        --text-soft: #334155;
+        --text-muted: #64748b;
+        --border: rgba(15, 23, 42, 0.12);
+      }
+
+      body {
+        background: #ffffff;
+      }
+
+      .site-header,
+      .hero,
+      .form-card,
+      .history-card,
+      .footer,
+      .toast,
+      .mobile-panel {
+        display: none !important;
+      }
+
+      .results-section {
+        display: block !important;
+        padding-top: 0;
+      }
+
+      .results-main,
+      .result-grid {
+        display: block;
+      }
+
+      .card {
+        box-shadow: none;
+        border-color: #dbe2ea;
+        break-inside: avoid;
+        margin-bottom: 18px;
+      }
+
+      .results-header .actions-row {
+        display: none;
+      }
+
+      .gauge {
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Pular para o conteúdo</a>
+
+  <header class="site-header" aria-label="Cabeçalho principal">
+    <div class="container">
+      <nav class="nav" aria-label="Navegação principal">
+        <a href="#top" class="brand" aria-label="Voltar ao topo">
+          <div class="brand-mark" aria-hidden="true">📧</div>
+          <div class="brand-copy">
+            <p class="brand-title">Esta Reunião Poderia Ser Um E-mail?</p>
+            <p class="brand-subtitle">SaaS POC para times ocupados</p>
+          </div>
+        </a>
+
+        <div class="nav-actions">
+          <div class="desktop-links" aria-label="Links de navegação">
+            <a href="#analisador">Analisador</a>
+            <a href="#resultado">Resultado</a>
+            <a href="#ultima-analise">Última análise</a>
+          </div>
+
+          <button class="icon-button theme-toggle" id="themeToggle" type="button" aria-label="Alternar modo escuro">
+            <span aria-hidden="true" id="themeIcon">🌙</span>
+            <span class="theme-label">Alternar tema</span>
+          </button>
+
+          <button class="icon-button menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="mobilePanel">
+            <span aria-hidden="true">☰</span>
+            <span class="menu-label">Abrir menu</span>
+          </button>
+        </div>
+      </nav>
+
+      <div class="mobile-panel" id="mobilePanel" aria-label="Menu mobile">
+        <div class="mobile-links">
+          <a href="#analisador">Analisador</a>
+          <a href="#resultado">Resultado</a>
+          <a href="#ultima-analise">Última análise</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <div class="hero-badge pulse">Desenvolvido por profissionais presos em reuniões desnecessárias.</div>
+            <h1 id="hero-title">Esta Reunião Poderia Ser Um E-mail?</h1>
+            <p>Pare de desperdiçar o recurso mais caro da sua empresa: o tempo das pessoas.</p>
+
+            <div class="hero-actions">
+              <button class="primary-button" type="button" id="heroCTA">Analisar Reunião</button>
+              <a class="secondary-button" href="#ultima-analise">Ver última análise</a>
+            </div>
+
+            <div class="hero-stats" aria-label="Indicadores visuais">
+              <div class="stat-card">
+                <span class="stat-number">0–100</span>
+                <span class="stat-label">Score local com lógica simulada</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-number">6 cargos</span>
+                <span class="stat-label">Custos estimados por senioridade</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-number">100% browser</span>
+                <span class="stat-label">Sem backend, sem API, sem desculpas</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-number">1 clique</span>
+                <span class="stat-label">Para descobrir se o calendário sofre à toa</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-visual" aria-hidden="true">
+            <div class="hero-panel">
+              <div class="window-bar">
+                <span class="window-dot"></span>
+                <span class="window-dot"></span>
+                <span class="window-dot"></span>
+              </div>
+
+              <div class="mock-grid">
+                <div class="mock-card">
+                  <div class="mock-title">
+                    <strong>Análise rápida</strong>
+                    <span class="pill warning">Questionável</span>
+                  </div>
+                  <div class="mock-list">
+                    <div class="mock-line long"></div>
+                    <div class="mock-line medium"></div>
+                    <div class="mock-line short"></div>
+                  </div>
+                  <div class="mini-gauge">
+                    <div class="mini-gauge-fill"></div>
+                  </div>
+                </div>
+
+                <div class="mock-card">
+                  <div class="mock-title">
+                    <strong>Custo estimado</strong>
+                    <span class="pill primary">R$ 487,50</span>
+                  </div>
+                  <div class="mock-list">
+                    <div class="mock-line long"></div>
+                    <div class="mock-line short"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="floating-note">
+                <strong>Diagnóstico gentil</strong>
+                <p>Se o objetivo é só atualizar todo mundo, talvez o inbox já dê conta.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="analisador" aria-labelledby="analisador-title">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <h2 id="analisador-title">Analisador de Reuniões</h2>
+            <p>Descreva o contexto, adicione os participantes e receba um veredito com score, custo estimado, justificativa e alternativas assíncronas.</p>
+          </div>
+        </div>
+
+        <div class="analyzer-layout">
+          <article class="card form-card" aria-labelledby="form-title">
+            <div class="form-card-header">
+              <div>
+                <h3 id="form-title">Analisador de Reuniões</h3>
+                <p>Uma engine simples, rápida e local para evitar encontros que poderiam nascer como texto.</p>
+              </div>
+              <span class="pill primary">Teste já</span>
+            </div>
+
+            <form id="meetingForm" novalidate>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="meetingSubject">Assunto da reunião</label>
+                  <input
+                    class="input"
+                    type="text"
+                    id="meetingSubject"
+                    name="meetingSubject"
+                    placeholder="Ex.: Escolha do novo fornecedor de CRM"
+                    required
+                  />
+                  <small>Seja específico. Assuntos vagos costumam gerar reuniões ainda mais vagas.</small>
+                </div>
+
+                <div class="field">
+                  <label for="meetingGoal">Objetivo da reunião</label>
+                  <textarea
+                    class="textarea"
+                    id="meetingGoal"
+                    name="meetingGoal"
+                    placeholder="Ex.: Aprovar orçamento e definir fornecedor"
+                    required
+                  ></textarea>
+                  <small>Explique o que precisa acontecer no fim da conversa.</small>
+                </div>
+
+                <div class="field">
+                  <label for="meetingDuration">Duração prevista</label>
+                  <select class="select" id="meetingDuration" name="meetingDuration" required>
+                    <option value="15">15 minutos</option>
+                    <option value="30" selected>30 minutos</option>
+                    <option value="45">45 minutos</option>
+                    <option value="60">60 minutos</option>
+                    <option value="90">90 minutos</option>
+                    <option value="120">120 minutos</option>
+                  </select>
+                  <small>Quanto maior a duração, maior a chance do café ficar gealdo.</small>
+                </div>
+
+                <div class="participants-card">
+                  <div class="participants-header">
+                    <div>
+                      <h4>Participantes</h4>
+                      <p>Adicione quantos grupos de cargo forem necessários.</p>
+                    </div>
+                    <span class="pill success" id="participantsTotalBadge">1 participante</span>
+                  </div>
+
+                  <div id="participantsList" class="participants-list" aria-live="polite"></div>
+
+                  <button class="add-button" type="button" id="addParticipantBtn">+ Adicionar participante</button>
+                </div>
+
+                <div class="inline-metrics" aria-label="Resumo do formulário">
+                  <div class="metric-tile">
+                    <span>Total de participantes</span>
+                    <strong id="inlineParticipantCount">1</strong>
+                  </div>
+                  <div class="metric-tile">
+                    <span>Duração selecionada</span>
+                    <strong id="inlineDuration">30 min</strong>
+                  </div>
+                </div>
+
+                <div class="actions-row">
+                  <button class="primary-button" type="submit">Analisar Reunião</button>
+                  <button class="secondary-button" type="button" id="newAnalysisBtn">Nova Análise</button>
+                  <button class="ghost-button" type="button" id="restoreLastBtn">Restaurar última</button>
+                  <button class="danger-button" type="button" id="clearStorageBtn">Limpar dados</button>
+                </div>
+              </div>
+            </form>
+          </article>
+
+          <aside class="card history-card" id="ultima-analise" aria-labelledby="history-title">
+            <div>
+              <h3 id="history-title">Última análise salva</h3>
+              <p>O aplicativo guarda localmente o último diagnóstico para facilitar retomadas rápidas.</p>
+            </div>
+
+            <div id="historyContent" class="history-row">
+              <p class="history-empty">Nenhuma análise salva por enquanto.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section results-section" id="resultado" aria-labelledby="resultado-title">
+      <div class="container">
+        <div class="results-layout">
+          <div class="results-header">
+            <div>
+              <h2 id="resultado-title">Dashboard de resultado</h2>
+              <p>Um retrato direto da utilidade da reunião, do impacto financeiro e das opções assíncronas disponíveis.</p>
+            </div>
+
+            <div class="actions-row">
+              <button class="secondary-button" type="button" id="scrollToFormBtn">Editar análise</button>
+              <button class="ghost-button" type="button" id="printReportBtn">Imprimir Relatório</button>
+              <button class="primary-button" type="button" id="repeatAnalysisBtn">Nova Análise</button>
+            </div>
+          </div>
+
+          <div class="results-main">
+            <div class="surface-grid">
+              <article class="card verdict-card">
+                <span class="pill verdict-label primary" id="verdictPill">Análise concluída</span>
+                <h3 class="verdict-text" id="verdictText">Seu veredito aparecerá aqui.</h3>
+                <p class="verdict-description" id="verdictDescription">Preencha o formulário para descobrir se essa reunião merece existir.</p>
+              </article>
+
+              <div class="result-grid">
+                <article class="card score-card">
+                  <div class="mock-title">
+                    <strong>Score da reunião</strong>
+                    <span class="pill primary" id="scoreLabel">0/100</span>
+                  </div>
+
+                  <div class="score-wrap">
+                    <div class="gauge" id="scoreGauge" aria-label="Medidor circular de score" role="img">
+                      <div class="gauge-inner">
+                        <span class="gauge-score" id="scoreValue">0</span>
+                        <span class="gauge-subtitle">de 100</span>
+                      </div>
+                    </div>
+
+                    <div class="score-legend">
+                      <span class="pill success">80–100 recomendado</span>
+                      <span class="pill warning">50–79 questionável</span>
+                      <span class="pill danger">0–49 e-mail</span>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="card cost-card">
+                  <div class="mock-title">
+                    <strong>Custo estimado</strong>
+                    <span class="pill success">Tempo é dinheiro</span>
+                  </div>
+
+                  <div class="cost-highlight" id="costValue">R$ 0,00</div>
+                  <p class="cost-caption" id="costSummary">Sem análise no momento.</p>
+
+                  <div class="cost-breakdown" id="costBreakdown"></div>
+                </article>
+              </div>
+
+              <article class="card summary-card">
+                <div class="mock-title">
+                  <strong>Justificativa</strong>
+                  <span class="pill primary">Engine local</span>
+                </div>
+
+                <p>O sistema interpreta o objetivo, aplica regras de palavras-chave, considera a duração e penaliza excesso de participantes.</p>
+                <div class="justification-box" id="justificationText">
+                  Nenhuma justificativa gerada ainda.
+                </div>
+              </article>
+
+              <article class="card alternatives-card">
+                <div class="mock-title">
+                  <strong>Alternativas sugeridas</strong>
+                  <span class="pill warning">Modo assíncrono</span>
+                </div>
+
+                <ul class="alternatives-list" id="alternativesList">
+                  <li>E-mail estruturado</li>
+                  <li>Documento compartilhado</li>
+                  <li>Comentários assíncronos</li>
+                  <li>Vídeo curto gravado</li>
+                  <li>Discussão via Slack ou Teams</li>
+                </ul>
+              </article>
+
+              <article class="card fun-card">
+                <span class="fun-emoji" aria-hidden="true">🗓️</span>
+                <div class="mock-title">
+                  <strong>Mensagem do calendário</strong>
+                  <span class="pill primary">Humor corporativo</span>
+                </div>
+                <p id="funMessage">Nem toda reunião merece existir.</p>
+              </article>
+            </div>
+
+            <aside class="card summary-card">
+              <div class="mock-title">
+                <strong>Resumo executivo</strong>
+                <span class="pill primary" id="executivePill">Aguardando dados</span>
+              </div>
+
+              <div class="history-summary" id="executiveSummary">
+                <span class="summary-chip">Assunto: —</span>
+                <span class="summary-chip">Participantes: —</span>
+                <span class="summary-chip">Duração: —</span>
+                <span class="summary-chip">Custo: —</span>
+              </div>
+
+              <div class="justification-box" id="executiveInsight">
+                Preencha o formulário para gerar um insight rápido para líderes e gestores.
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" aria-label="Rodapé">
+    <div class="container">
+      <div class="footer-card">
+        <p>POC em arquivo único, pronto para GitHub Pages, sem backend, sem APIs e com lógica 100% executada no navegador.</p>
+        <p>Feito para líderes, coordenadores, gerentes, diretores, fundadores e qualquer pessoa que já entrou numa call sem saber por quê.</p>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <template id="participantRowTemplate">
+    <div class="participant-row">
+      <div class="field">
+        <label>Cargo</label>
+        <select class="select participant-role" aria-label="Selecionar cargo">
+          <option value="Diretor">Diretor</option>
+          <option value="Gerente">Gerente</option>
+          <option value="Coordenador">Coordenador</option>
+          <option value="Analista Sênior" selected>Analista Sênior</option>
+          <option value="Analista">Analista</option>
+          <option value="Estagiário">Estagiário</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Quantidade</label>
+        <input class="input participant-qty" type="number" min="1" step="1" value="1" aria-label="Quantidade de participantes" />
+      </div>
+
+      <button class="remove-participant" type="button" aria-label="Remover linha de participante">Remover</button>
+    </div>
+  </template>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const STORAGE_KEYS = {
+        theme: "meeting-mailer-theme",
+        lastAnalysis: "meeting-mailer-last-analysis",
+        draft: "meeting-mailer-draft"
+      };
+
+      const SALARIES = {
+        "Diretor": 35000,
+        "Gerente": 20000,
+        "Coordenador": 15000,
+        "Analista Sênior": 12000,
+        "Analista": 9000,
+        "Estagiário": 3000
+      };
+
+      const POSITIVE_KEYWORDS = ["aprovar", "decidir", "alinhar", "negociar", "priorizar", "definir", "resolver"];
+      const NEGATIVE_KEYWORDS = ["informar", "atualizar", "compartilhar", "comunicar", "avisar", "apresentar"];
+
+      const ALTERNATIVES = [
+        "E-mail estruturado",
+        "Documento compartilhado",
+        "Comentários assíncronos",
+        "Vídeo curto gravado",
+        "Discussão via Slack ou Teams"
+      ];
+
+      const FUN_MESSAGES = [
+        "Seu calendário agradece.",
+        "Esta análise foi realizada por sobreviventes de reuniões sem pauta.",
+        "Seu eu do futuro aprova esta decisão.",
+        "Cada reunião cancelada é uma pequena vitória para a humanidade.",
+        "Nem toda reunião merece existir."
+      ];
+
+      const DEFAULT_DRAFT = {
+        subject: "",
+        goal: "",
+        duration: 30,
+        participants: [{ role: "Analista Sênior", qty: 1 }]
+      };
+
+      const elements = {
+        body: document.body,
+        heroCTA: document.getElementById("heroCTA"),
+        menuToggle: document.getElementById("menuToggle"),
+        mobilePanel: document.getElementById("mobilePanel"),
+        themeToggle: document.getElementById("themeToggle"),
+        themeIcon: document.getElementById("themeIcon"),
+        meetingForm: document.getElementById("meetingForm"),
+        subject: document.getElementById("meetingSubject"),
+        goal: document.getElementById("meetingGoal"),
+        duration: document.getElementById("meetingDuration"),
+        participantsList: document.getElementById("participantsList"),
+        addParticipantBtn: document.getElementById("addParticipantBtn"),
+        participantsTotalBadge: document.getElementById("participantsTotalBadge"),
+        inlineParticipantCount: document.getElementById("inlineParticipantCount"),
+        inlineDuration: document.getElementById("inlineDuration"),
+        resultsSection: document.getElementById("resultado"),
+        verdictPill: document.getElementById("verdictPill"),
+        verdictText: document.getElementById("verdictText"),
+        verdictDescription: document.getElementById("verdictDescription"),
+        scoreGauge: document.getElementById("scoreGauge"),
+        scoreValue: document.getElementById("scoreValue"),
+        scoreLabel: document.getElementById("scoreLabel"),
+        costValue: document.getElementById("costValue"),
+        costSummary: document.getElementById("costSummary"),
+        costBreakdown: document.getElementById("costBreakdown"),
+        justificationText: document.getElementById("justificationText"),
+        alternativesList: document.getElementById("alternativesList"),
+        funMessage: document.getElementById("funMessage"),
+        executivePill: document.getElementById("executivePill"),
+        executiveSummary: document.getElementById("executiveSummary"),
+        executiveInsight: document.getElementById("executiveInsight"),
+        historyContent: document.getElementById("historyContent"),
+        newAnalysisBtn: document.getElementById("newAnalysisBtn"),
+        restoreLastBtn: document.getElementById("restoreLastBtn"),
+        clearStorageBtn: document.getElementById("clearStorageBtn"),
+        printReportBtn: document.getElementById("printReportBtn"),
+        repeatAnalysisBtn: document.getElementById("repeatAnalysisBtn"),
+        scrollToFormBtn: document.getElementById("scrollToFormBtn"),
+        toast: document.getElementById("toast"),
+        participantRowTemplate: document.getElementById("participantRowTemplate")
+      };
+
+      let toastTimer = null;
+
+      function normalizeText(text) {
+        return String(text || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+      }
+
+      function formatCurrency(value) {
+        return new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: "BRL"
+        }).format(Number(value || 0));
+      }
+
+      function pluralizeParticipant(total) {
+        return total === 1 ? "1 participante" : `${total} participantes`;
+      }
+
+      function showToast(message) {
+        elements.toast.textContent = message;
+        elements.toast.classList.add("is-visible");
+
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => {
+          elements.toast.classList.remove("is-visible");
+        }, 2600);
+      }
+
+      function setTheme(theme) {
+        const finalTheme = theme === "dark" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", finalTheme);
+        localStorage.setItem(STORAGE_KEYS.theme, finalTheme);
+        elements.themeIcon.textContent = finalTheme === "dark" ? "☀️" : "🌙";
+      }
+
+      function loadTheme() {
+        const saved = localStorage.getItem(STORAGE_KEYS.theme);
+        if (saved) {
+          setTheme(saved);
+          return;
+        }
+
+        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        setTheme(prefersDark ? "dark" : "light");
+      }
+
+      function toggleMenu(forceClose = false) {
+        const shouldOpen = forceClose ? false : !elements.mobilePanel.classList.contains("is-open");
+        elements.mobilePanel.classList.toggle("is-open", shouldOpen);
+        elements.menuToggle.setAttribute("aria-expanded", String(shouldOpen));
+        elements.body.classList.toggle("menu-open", shouldOpen);
+      }
+
+      function createParticipantRow(data = { role: "Analista Sênior", qty: 1 }) {
+        const fragment = elements.participantRowTemplate.content.cloneNode(true);
+        const row = fragment.querySelector(".participant-row");
+        const roleSelect = row.querySelector(".participant-role");
+        const qtyInput = row.querySelector(".participant-qty");
+        const removeBtn = row.querySelector(".remove-participant");
+
+        roleSelect.value = data.role && SALARIES[data.role] ? data.role : "Analista Sênior";
+        qtyInput.value = Math.max(1, Number(data.qty || 1));
+
+        roleSelect.addEventListener("change", handleDraftChange);
+        qtyInput.addEventListener("input", handleQuantityInput);
+        qtyInput.addEventListener("change", handleDraftChange);
+
+        removeBtn.addEventListener("click", () => {
+          const rows = elements.participantsList.querySelectorAll(".participant-row");
+          if (rows.length <= 1) {
+            showToast("Pelo menos um participante precisa existir.");
+            return;
+          }
+
+          row.remove();
+          updateInlineSummary();
+          saveDraft();
+        });
+
+        elements.participantsList.appendChild(fragment);
+        updateInlineSummary();
+      }
+
+      function getParticipantRows() {
+        return [...elements.participantsList.querySelectorAll(".participant-row")];
+      }
+
+      function getParticipantsData() {
+        return getParticipantRows().map((row) => {
+          const role = row.querySelector(".participant-role").value;
+          const qty = Math.max(1, Number(row.querySelector(".participant-qty").value || 1));
+          return { role, qty };
+        });
+      }
+
+      function setParticipantsData(participants = DEFAULT_DRAFT.participants) {
+        elements.participantsList.innerHTML = "";
+        const validParticipants = Array.isArray(participants) && participants.length
+          ? participants
+          : DEFAULT_DRAFT.participants;
+
+        validParticipants.forEach((participant) => createParticipantRow(participant));
+        updateInlineSummary();
+      }
+
+      function getTotalParticipants(participants = getParticipantsData()) {
+        return participants.reduce((sum, item) => sum + Math.max(1, Number(item.qty || 1)), 0);
+      }
+
+      function updateInlineSummary() {
+        const participants = getParticipantsData();
+        const total = getTotalParticipants(participants);
+        const durationValue = Number(elements.duration.value || 30);
+
+        elements.participantsTotalBadge.textContent = pluralizeParticipant(total);
+        elements.inlineParticipantCount.textContent = String(total);
+        elements.inlineDuration.textContent = `${durationValue} min`;
+      }
+
+      function handleQuantityInput(event) {
+        const input = event.currentTarget;
+        const cleaned = Math.max(1, Number(input.value || 1));
+        input.value = cleaned;
+        updateInlineSummary();
+        saveDraft();
+      }
+
+      function getDraftFromForm() {
+        return {
+          subject: elements.subject.value.trim(),
+          goal: elements.goal.value.trim(),
+          duration: Number(elements.duration.value || 30),
+          participants: getParticipantsData()
+        };
+      }
+
+      function saveDraft() {
+        const draft = getDraftFromForm();
+        localStorage.setItem(STORAGE_KEYS.draft, JSON.stringify(draft));
+      }
+
+      function loadDraft() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEYS.draft);
+          if (!raw) {
+            applyDraft(DEFAULT_DRAFT);
+            return;
+          }
+
+          const parsed = JSON.parse(raw);
+          applyDraft({
+            subject: parsed.subject || "",
+            goal: parsed.goal || "",
+            duration: Number(parsed.duration || 30),
+            participants: Array.isArray(parsed.participants) && parsed.participants.length
+              ? parsed.participants
+              : DEFAULT_DRAFT.participants
+          });
+        } catch {
+          applyDraft(DEFAULT_DRAFT);
+        }
+      }
+
+      function applyDraft(draft) {
+        elements.subject.value = draft.subject || "";
+        elements.goal.value = draft.goal || "";
+        elements.duration.value = String(draft.duration || 30);
+        setParticipantsData(draft.participants);
+        updateInlineSummary();
+      }
+
+      function clearForm() {
+        applyDraft(DEFAULT_DRAFT);
+        elements.subject.focus();
+        saveDraft();
+      }
+
+      function validateForm() {
+        const draft = getDraftFromForm();
+
+        if (!draft.subject) {
+          elements.subject.focus();
+          showToast("Informe o assunto da reunião.");
+          return false;
+        }
+
+        if (!draft.goal) {
+          elements.goal.focus();
+          showToast("Descreva o objetivo da reunião.");
+          return false;
+        }
+
+        if (getTotalParticipants(draft.participants) < 1) {
+          showToast("Adicione pelo menos um participante.");
+          return false;
+        }
+
+        return true;
+      }
+
+      function countKeywordMatches(text, keywords) {
+        const normalized = normalizeText(text);
+        return keywords.reduce((count, keyword) => {
+          return count + (normalized.includes(normalizeText(keyword)) ? 1 : 0);
+        }, 0);
+      }
+
+      function getVerdictData(score) {
+        if (score >= 80) {
+          return {
+            text: "✅ Reunião Recomendada",
+            description: "Há sinais claros de decisão, alinhamento ou resolução que justificam uma conversa síncrona.",
+            color: "var(--success)",
+            pillClass: "success"
+          };
+        }
+
+        if (score >= 50) {
+          return {
+            text: "⚠️ Reunião Questionável",
+            description: "Pode fazer sentido, mas o objetivo ainda sugere que parte do trabalho poderia acontecer de forma assíncrona antes.",
+            color: "var(--warning)",
+            pillClass: "warning"
+          };
+        }
+
+        return {
+          text: "📧 Isso Poderia Ser Um E-mail",
+          description: "O contexto aponta mais para compartilhamento de informações do que para uma necessidade real de encontro ao vivo.",
+          color: "var(--danger)",
+          pillClass: "danger"
+        };
+      }
+
+      function calculateMeetingCost(durationMinutes, participants) {
+        const hourlyBase = 160;
+        const durationHours = durationMinutes / 60;
+
+        const breakdown = participants.map((participant) => {
+          const monthlySalary = SALARIES[participant.role] || 0;
+          const hourlyRate = monthlySalary / hourlyBase;
+          const subtotal = hourlyRate * durationHours * participant.qty;
+
+          return {
+            role: participant.role,
+            qty: participant.qty,
+            monthlySalary,
+            subtotal
+          };
+        });
+
+        const total = breakdown.reduce((sum, item) => sum + item.subtotal, 0);
+
+        return {
+          durationMinutes,
+          totalParticipants: getTotalParticipants(participants),
+          breakdown,
+          total
+        };
+      }
+
+      function buildJustification(score, positiveCount, negativeCount, totalParticipants, duration) {
+        const reasons = [];
+
+        if (positiveCount > 0) {
+          reasons.push("o objetivo inclui sinais de tomada de decisão, alinhamento ou definição");
+        }
+
+        if (negativeCount > 0) {
+          reasons.push("parte da descrição sugere comunicação ou atualização que poderia ser assíncrona");
+        }
+
+        if (totalParticipants > 12) {
+          reasons.push("há muitas pessoas envolvidas, o que aumenta custo e reduz foco");
+        } else if (totalParticipants > 8) {
+          reasons.push("o número de participantes já começa a pressionar a objetividade");
+        }
+
+        if (duration > 90) {
+          reasons.push("a duração proposta é longa e adiciona atrito ao calendário");
+        } else if (duration > 60) {
+          reasons.push("o tempo previsto passa de uma hora e merece recorte melhor");
+        } else if (duration <= 30) {
+          reasons.push("o formato curto ajuda a manter a reunião enxuta");
+        }
+
+        if (score >= 80) {
+          return "O objetivo da reunião envolve tomada de decisão e alinhamento entre áreas, justificando um encontro síncrono. Além disso, " + reasons.join(", ") + ".";
+        }
+
+        if (score >= 50) {
+          return "A reunião tem algum potencial, mas ainda apresenta sinais mistos. Hoje, " + reasons.join(", ") + ", então vale preparar informação assíncrona antes de confirmar o encontro.";
+        }
+
+        return "O objetivo informado sugere compartilhamento de informações, algo que poderia ocorrer de forma assíncrona. Neste cenário, " + reasons.join(", ") + ", tornando a reunião difícil de defender.";
+      }
+
+      function generateAlternatives(score, positiveCount, negativeCount) {
+        if (score >= 80 && positiveCount >= 2 && negativeCount === 0) {
+          return [
+            "Enviar pré-leitura por e-mail estruturado",
+            "Usar documento compartilhado para contexto e dados",
+            "Concentrar a reunião apenas nas decisões pendentes",
+            "Registrar decisões e responsáveis em comentários assíncronos",
+            "Fazer follow-up via Slack ou Teams"
+          ];
+        }
+
+        if (score >= 50) {
+          return [
+            "Documento compartilhado com contexto e opções",
+            "Comentários assíncronos antes da reunião",
+            "E-mail estruturado com pontos para decisão",
+            "Vídeo curto gravado para nivelamento",
+            "Discussão via Slack ou Teams para reduzir escopo"
+          ];
+        }
+
+        return [...ALTERNATIVES];
+      }
+
+      function randomFunMessage() {
+        const index = Math.floor(Math.random() * FUN_MESSAGES.length);
+        return FUN_MESSAGES[index];
+      }
+
+      function buildExecutiveInsight(result) {
+        if (result.score >= 80) {
+          return "Use a reunião para decidir o que está pendente, limite o escopo ao essencial e envie contexto antes para reduzir tempo síncrono.";
+        }
+
+        if (result.score >= 50) {
+          return "Há valor potencial, mas a reunião deve nascer menor: menos gente, menos tempo e mais contexto preparado por escrito.";
+        }
+
+        return "A melhor decisão aqui tende a ser assíncrona. Transforme o objetivo em mensagem clara, peça respostas objetivas e só reúna se restar impasse real.";
+      }
+
+      function analyzeMeeting(data) {
+        const mergedText = `${data.subject} ${data.goal}`;
+        const positiveCount = countKeywordMatches(mergedText, POSITIVE_KEYWORDS);
+        const negativeCount = countKeywordMatches(mergedText, NEGATIVE_KEYWORDS);
+        const totalParticipants = getTotalParticipants(data.participants);
+        const duration = Number(data.duration);
+
+        let score = 55;
+        score += positiveCount * 12;
+        score -= negativeCount * 12;
+
+        if (totalParticipants > 12) {
+          score -= 30;
+        } else if (totalParticipants > 8) {
+          score -= 15;
+        }
+
+        if (duration > 90) {
+          score -= 20;
+        } else if (duration > 60) {
+          score -= 10;
+        }
+
+        if (totalParticipants <= 4) {
+          score += 8;
+        } else if (totalParticipants <= 8) {
+          score += 2;
+        }
+
+        if (duration <= 30) {
+          score += 6;
+        } else if (duration <= 45) {
+          score += 2;
+        }
+
+        if (positiveCount === 0 && negativeCount > 0) {
+          score -= 8;
+        }
+
+        score = Math.max(0, Math.min(100, score));
+
+        const verdict = getVerdictData(score);
+        const cost = calculateMeetingCost(duration, data.participants);
+        const alternatives = generateAlternatives(score, positiveCount, negativeCount);
+        const funMessage = randomFunMessage();
+        const justification = buildJustification(score, positiveCount, negativeCount, totalParticipants, duration);
+
+        return {
+          ...data,
+          score,
+          verdict,
+          cost,
+          positiveCount,
+          negativeCount,
+          alternatives,
+          funMessage,
+          justification,
+          analyzedAt: new Date().toISOString()
+        };
+      }
+
+      function applyPillState(element, variant, text) {
+        element.className = `pill ${variant}`;
+        element.textContent = text;
+      }
+
+      function renderCostBreakdown(cost) {
+        if (!cost.breakdown.length) {
+          elements.costBreakdown.innerHTML = "";
+          return;
+        }
+
+        elements.costBreakdown.innerHTML = cost.breakdown
+          .map((item) => {
+            return `
+              <div class="breakdown-item">
+                <div>
+                  <strong>${item.role}</strong>
+                  <span>${item.qty} ${item.qty === 1 ? "pessoa" : "pessoas"}</span>
+                </div>
+                <strong>${formatCurrency(item.subtotal)}</strong>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderAlternatives(alternatives) {
+        elements.alternativesList.innerHTML = alternatives
+          .map((item) => `<li>${item}</li>`)
+          .join("");
+      }
+
+      function renderExecutiveSummary(result) {
+        elements.executiveSummary.innerHTML = `
+          <span class="summary-chip">Assunto: ${result.subject}</span>
+          <span class="summary-chip">Participantes: ${result.cost.totalParticipants}</span>
+          <span class="summary-chip">Duração: ${result.duration} min</span>
+          <span class="summary-chip">Custo: ${formatCurrency(result.cost.total)}</span>
+        `;
+        elements.executiveInsight.textContent = buildExecutiveInsight(result);
+      }
+
+      function renderResult(result, shouldScroll = true) {
+        const { verdict, score, cost } = result;
+        const gaugeAngle = `${(score / 100) * 360}deg`;
+
+        elements.resultsSection.classList.add("is-visible");
+
+        applyPillState(elements.verdictPill, verdict.pillClass, verdict.text);
+        elements.verdictText.textContent = verdict.text;
+        elements.verdictDescription.textContent = verdict.description;
+
+        elements.scoreGauge.style.setProperty("--gauge-angle", gaugeAngle);
+        elements.scoreGauge.style.setProperty("--gauge-color", verdict.color);
+        elements.scoreValue.textContent = String(score);
+        elements.scoreLabel.textContent = `${score}/100`;
+
+        elements.costValue.textContent = formatCurrency(cost.total);
+        elements.costSummary.textContent = `Esta reunião custará aproximadamente ${formatCurrency(cost.total)} em ${result.duration} minutos para ${cost.totalParticipants} ${cost.totalParticipants === 1 ? "participante" : "participantes"}.`;
+
+        renderCostBreakdown(cost);
+
+        elements.justificationText.textContent = result.justification;
+        renderAlternatives(result.alternatives);
+        elements.funMessage.textContent = result.funMessage;
+
+        applyPillState(elements.executivePill, verdict.pillClass, verdict.text.replace(/^[^\s]+\s/, "").trim() || "Análise");
+        renderExecutiveSummary(result);
+
+        localStorage.setItem(STORAGE_KEYS.lastAnalysis, JSON.stringify(result));
+        renderHistoryCard(result);
+
+        if (shouldScroll) {
+          elements.resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+
+      function renderHistoryCard(result = null) {
+        let analysis = result;
+
+        if (!analysis) {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEYS.lastAnalysis);
+            analysis = raw ? JSON.parse(raw) : null;
+          } catch {
+            analysis = null;
+          }
+        }
+
+        if (!analysis) {
+          elements.historyContent.innerHTML = '<p class="history-empty">Nenhuma análise salva por enquanto.</p>';
+          return;
+        }
+
+        const date = new Date(analysis.analyzedAt);
+        const dateLabel = isNaN(date.getTime())
+          ? "Data indisponível"
+          : new Intl.DateTimeFormat("pt-BR", {
+              dateStyle: "short",
+              timeStyle: "short"
+            }).format(date);
+
+        elements.historyContent.innerHTML = `
+          <div class="history-summary">
+            <span class="summary-chip">${analysis.verdict.text}</span>
+            <span class="summary-chip">Score: ${analysis.score}/100</span>
+            <span class="summary-chip">Custo: ${formatCurrency(analysis.cost.total)}</span>
+            <span class="summary-chip">Atualizado em: ${dateLabel}</span>
+            <div class="justification-box">
+              <strong style="display:block; margin-bottom: 8px;">${analysis.subject}</strong>
+              ${analysis.justification}
+            </div>
+          </div>
+        `;
+      }
+
+      function restoreLastAnalysis() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEYS.lastAnalysis);
+          if (!raw) {
+            showToast("Nenhuma análise salva encontrada.");
+            return;
+          }
+
+          const analysis = JSON.parse(raw);
+          applyDraft({
+            subject: analysis.subject || "",
+            goal: analysis.goal || "",
+            duration: Number(analysis.duration || 30),
+            participants: analysis.participants || DEFAULT_DRAFT.participants
+          });
+          renderResult(analysis, true);
+          showToast("Última análise restaurada.");
+        } catch {
+          showToast("Não foi possível restaurar a última análise.");
+        }
+      }
+
+      function clearStoredData() {
+        localStorage.removeItem(STORAGE_KEYS.lastAnalysis);
+        localStorage.removeItem(STORAGE_KEYS.draft);
+        renderHistoryCard(null);
+        clearForm();
+        elements.resultsSection.classList.remove("is-visible");
+        showToast("Dados locais removidos.");
+      }
+
+      function handleDraftChange() {
+        updateInlineSummary();
+        saveDraft();
+      }
+
+      function handleFormSubmit(event) {
+        event.preventDefault();
+
+        if (!validateForm()) return;
+
+        const data = getDraftFromForm();
+        const result = analyzeMeeting(data);
+
+        saveDraft();
+        renderResult(result, true);
+        showToast("Análise concluída.");
+      }
+
+      function initializeEventListeners() {
+        elements.heroCTA.addEventListener("click", () => {
+          document.getElementById("analisador").scrollIntoView({ behavior: "smooth", block: "start" });
+          elements.subject.focus();
+        });
+
+        elements.themeToggle.addEventListener("click", () => {
+          const current = document.documentElement.getAttribute("data-theme");
+          setTheme(current === "dark" ? "light" : "dark");
+        });
+
+        elements.menuToggle.addEventListener("click", () => toggleMenu());
+
+        document.querySelectorAll(".mobile-links a").forEach((link) => {
+          link.addEventListener("click", () => toggleMenu(true));
+        });
+
+        elements.addParticipantBtn.addEventListener("click", () => {
+          createParticipantRow({ role: "Analista", qty: 1 });
+          saveDraft();
+          showToast("Participante adicionado.");
+        });
+
+        elements.meetingForm.addEventListener("submit", handleFormSubmit);
+
+        elements.subject.addEventListener("input", saveDraft);
+        elements.goal.addEventListener("input", saveDraft);
+        elements.duration.addEventListener("change", handleDraftChange);
+
+        elements.newAnalysisBtn.addEventListener("click", () => {
+          clearForm();
+          elements.resultsSection.classList.remove("is-visible");
+          showToast("Formulário pronto para uma nova análise.");
+        });
+
+        elements.repeatAnalysisBtn.addEventListener("click", () => {
+          clearForm();
+          elements.resultsSection.classList.remove("is-visible");
+          document.getElementById("analisador").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+
+        elements.restoreLastBtn.addEventListener("click", restoreLastAnalysis);
+
+        elements.clearStorageBtn.addEventListener("click", clearStoredData);
+
+        elements.scrollToFormBtn.addEventListener("click", () => {
+          document.getElementById("analisador").scrollIntoView({ behavior: "smooth", block: "start" });
+          elements.subject.focus();
+        });
+
+        elements.printReportBtn.addEventListener("click", () => {
+          if (!elements.resultsSection.classList.contains("is-visible")) {
+            showToast("Faça uma análise antes de imprimir o relatório.");
+            return;
+          }
+          window.print();
+        });
+
+        window.addEventListener("resize", () => {
+          if (window.innerWidth >= 768) {
+            toggleMenu(true);
+          }
+        });
+
+        window.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            toggleMenu(true);
+          }
+        });
+      }
+
+      function bootstrap() {
+        loadTheme();
+        loadDraft();
+        initializeEventListeners();
+        renderHistoryCard();
+
+        try {
+          const raw = localStorage.getItem(STORAGE_KEYS.lastAnalysis);
+          if (raw) {
+            const analysis = JSON.parse(raw);
+            renderResult(analysis, false);
+          }
+        } catch {
+          renderHistoryCard(null);
+        }
+      }
+
+      bootstrap();
+    })();
+  </script>
+</body>
+</html>
