@@ -843,8 +843,7 @@
 
     .results-main {
 	display: grid;
-	 gap: 18px;
-	  grid-template-columns: 1fr;   /* sempre 1 coluna por padrão */
+	 gap: 18px;   /* sempre 1 coluna por padrão */
 	}
 
     .verdict-card {
@@ -1204,6 +1203,63 @@
       }
     }
 
+
+    /* ── Responsiveness fix ── */
+    .results-main {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1fr;
+    }
+
+    .surface-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1fr;
+      min-width: 0;
+    }
+
+    .result-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1fr;
+    }
+
+    .results-main > *,
+    .surface-grid > *,
+    .result-grid > * {
+      min-width: 0;
+    }
+
+    .cost-card,
+    .score-card,
+    .summary-card,
+    .verdict-card,
+    .alternatives-card,
+    .fun-card {
+      min-width: 0;
+    }
+
+    .cost-highlight {
+      font-size: clamp(1.6rem, 5vw, 3rem);
+    }
+
+    .breakdown-item {
+      align-items: start;
+    }
+
+    .verdict-text,
+    .cost-highlight,
+    .breakdown-item strong,
+    .summary-chip,
+    .justification-box,
+    .cost-caption,
+    .verdict-description,
+    #executiveInsight,
+    #costSummary {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
     @media (min-width: 640px) {
       .hero {
         padding: 58px 0 38px;
@@ -1263,20 +1319,11 @@
     gap: 18px;
 	  }
 
-	  .surface-grid {
-    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-    align-items: start;
-	  }
+	  
 
-	  .results-main {
-    grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
-    align-items: start;
-	  }
+	  
 
-	  .result-grid {
-    grid-template-columns: repeat(2, minmax(260px, 1fr));
-    gap: 18px;
-	  }
+	  
 	}
 
     @media print {
@@ -1311,9 +1358,7 @@
       }
 
       .results-main,
-      .result-grid {
-        display: block;
-      }
+      
 
       .card {
         box-shadow: none;
@@ -1329,6 +1374,12 @@
       .gauge {
         box-shadow: none;
       }
+    
+      .result-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+    
     }
   </style>
 </head>
@@ -1658,9 +1709,8 @@
                 </div>
                 <p id="funMessage">Nem toda reunião merece existir.</p>
               </article>
-            </div>
 
-            <aside class="card summary-card">
+              <aside class="card summary-card">
               <div class="mock-title">
                 <strong>Resumo executivo</strong>
                 <span class="pill primary" id="executivePill">Aguardando dados</span>
@@ -1677,6 +1727,7 @@
                 Preencha o formulário para gerar um insight rápido para líderes e gestores.
               </div>
             </aside>
+            </div>
           </div>
         </div>
       </div>
